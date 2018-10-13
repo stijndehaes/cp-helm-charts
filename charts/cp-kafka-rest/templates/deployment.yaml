@@ -64,8 +64,14 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+          {{- if not (hasKey .Values.configurationOverrides "zookeeper.connect") }}
           - name: KAFKA_REST_ZOOKEEPER_CONNECT
-            value: {{ template "cp-kafka-rest.cp-zookeeper.service-name" . }}
+            value: {{ include "cp-kafka-rest.cp-zookeeper.service-name" . | quote }}
+          {{- end }}
+          {{- range $key, $value := .Values.configurationOverrides }}
+          - name: {{ printf "KAFKA_REST_%s" $key | replace "." "_" | upper | quote }}
+            value: {{ $value | quote }}
+          {{- end }}
           - name: KAFKA_REST_SCHEMA_REGISTRY_URL
             value: {{ template "cp-kafka-rest.cp-schema-registry.service-name" . }}
           {{- if .Values.jmx.port }}
